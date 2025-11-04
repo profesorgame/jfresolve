@@ -1,0 +1,29 @@
+[
+  {
+    "category": "General",
+    "name": "Jfresolve",
+    "owner": "vicking20",
+    "guid": "506F18B8-5DAD-4CD3-B9A0-F7ED933E9939",
+    "description": "Stream and resolve external media sources directly through Jellyfin.",
+    "overview": "Simplify external playback — Jfresolve automatically finds and streams external media from stremio.",
+    "imageUrl": "https://raw.githubusercontent.com/vicking20/jfresolve/main/jfresolve.png",
+    "versions": [
+      {
+        "version": "1.1.0.0",
+        "changelog": "Jfresolve plugin for jellyfin version 10.11.x.x",
+        "sourceUrl": "https://github.com/vicking20/jfresolve/releases/download/10.11.1.1.0.0/jfresolve_10.11_1.1.0.0.zip",
+        "checksum": "sha256:dbf766839ab7ec71edc4afe55799879264ecf6731a8f967a9a095ac7d7298625",
+        "targetAbi": "10.11.0.0",
+        "timestamp": "2025-11-04T00:00:00Z"
+      },
+      {
+        "version": "1.0.0.0",
+        "changelog": "Jfresolve plugin for jellyfin version 10.9.x.x",
+        "sourceUrl": "https://github.com/vicking20/jfresolve/releases/download/10.9.1.0.0.0/jfresolve_10.9_1.0.0.0.zip",
+        "checksum": "sha256:637d911dc0c1e2b78a32c7d20ee7ae8ded23fa8f151c6600e3ddf947ec25dae8",
+        "targetAbi": "10.9.0.0",
+        "timestamp": "2025-11-04T00:00:00Z"
+      }
+    ]
+  }
+]

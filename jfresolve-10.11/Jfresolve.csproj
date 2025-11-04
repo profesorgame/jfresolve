@@ -16,15 +16,7 @@
 
   <ItemGroup>
     <None Remove="Config\Config.html" />
-    <None Remove="Config\config.html" />
-    <None Update="manifest.json">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="jfresolve.png">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <EmbeddedResource Include="Config\config.html" />
-    <EmbeddedResource Include="jfresolve.png" />
   </ItemGroup>
 
 </Project>

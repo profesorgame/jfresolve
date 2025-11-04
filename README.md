@@ -30,15 +30,6 @@ A Jellyfin plugin that integrates external streaming sources (Stremio addons) fr
 
 ## Versions
 
-This repository contains two versions of the plugin to support different Jellyfin versions:
-
-### **jfresolve-10.9** (Legacy)
-- **Target**: Jellyfin 10.9.x
-- **Framework**: .NET 8.0
-- **Status**: Abandoned but works, incomplete
-- **Issue**: This version may clutter your library with content from search, the search is slow and depends on jellyfin refreshing your library really quickly, better to use the updated plugin
-- **Latest Release**: See [Releases](../../releases)
-
 ### **jfresolve-11.0** (Current)
 - **Target**: Jellyfin 11.0+
 - **Framework**: .NET 9.0
@@ -46,13 +37,6 @@ This repository contains two versions of the plugin to support different Jellyfi
 - **Latest Release**: See [Releases](../../releases)
 
 ## Installation
-
-### For Jellyfin 10.9.x Users
-
-1. Add the link to the plugin to your Jellyfin server's plugin repository: [https://raw.githubusercontent.com/vicking20/jfresolve/refs/heads/main/repository.json](https://raw.githubusercontent.com/vicking20/jfresolve/refs/heads/main/repository.json)
-2. Install and configure your plugin. Tested with Torrentio, TorrentioRD, Aiostreams, MediaFusion. Your plugin needs to have your real debrid key setup.
-
-### For Jellyfin 11.0+ Users
 
 1. Add the link to the plugin to your Jellyfin server's plugin repository: [https://raw.githubusercontent.com/vicking20/jfresolve/refs/heads/main/repository.json](https://raw.githubusercontent.com/vicking20/jfresolve/refs/heads/main/repository.json)
 2. Install and configure your plugin. Tested with Torrentio, TorrentioRD, Aiostreams, MediaFusion. Your plugin needs to have your real debrid key setup.
@@ -80,30 +64,17 @@ This repository contains two versions of the plugin to support different Jellyfi
 
 ### Prerequisites
 
-- .NET 8.0 or 9.0 SDK (depending on version)
+- .NET 9.0 SDK
 
 ### Build Steps
 
-For Jellyfin 10.9.x:
-```bash
-cd jfresolve-10.9/Jellyfin.Plugin.Jfresolve
-dotnet build -c Release
-```
-
-For Jellyfin 11.0+:
 ```bash
 cd jfresolve-11.0
 dotnet build -c Release
 ```
 
 Compiled DLL will be at:
-- 10.9: `jfresolve-10.9/Jellyfin.Plugin.Jfresolve/bin/Release/net8.0/Jellyfin.Plugin.Jfresolve.dll`
 - 11.0: `jfresolve-11.0/bin/Release/net9.0/Jfresolve.dll`
-
-### Release Numbering
-
-- **10.9.x series**: For Jellyfin 10.9 users (e.g., 10.9.1, 10.9.2)
-- **11.0.x series**: For Jellyfin 11.0+ users (e.g., 11.0.0, 11.0.1)
 
 ## Architecture
 

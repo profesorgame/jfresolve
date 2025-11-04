@@ -81,7 +81,6 @@ This repository contains two versions of the plugin to support different Jellyfi
 ### Prerequisites
 
 - .NET 8.0 or 9.0 SDK (depending on version)
-- Git
 
 ### Build Steps
 

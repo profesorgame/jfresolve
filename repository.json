@@ -11,7 +11,7 @@
       {
         "version": "1.0.0.1",
         "changelog": "Library refresh after search added",
-        "sourceUrl": "https://github.com/vicking20/jfresolve/releases/download/10.11.1.0.0.1/jfresolve10.11.1.0.0.1.zip",
+        "sourceUrl": "https://github.com/vicking20/jfresolve/releases/download/10.11.1.0.0.1/jfresolve.zip",
         "checksum": "9044cbf10b2197f4f391bb4534842406",
         "targetAbi": "10.11.0.0",
         "timestamp": "2025-11-04T12:04:00Z"
@@ -19,7 +19,7 @@
       {
         "version": "1.0.0.0",
         "changelog": "Jfresolve plugin for jellyfin version 10.11.x.x - Added configurable library population scheduling, fixed plugin disposal on uninstall, improved version segmentation",
-        "sourceUrl": "https://github.com/vicking20/jfresolve/releases/download/10.11.1.0.0.0/jfresolve10.11.1.0.0.0.zip",
+        "sourceUrl": "https://github.com/vicking20/jfresolve/releases/download/10.11.1.0.0.0/jfresolve.zip",
         "checksum": "d010683d6c50db1c4e4f86f5198f5ec1",
         "targetAbi": "10.11.0.0",
         "timestamp": "2025-11-04T12:04:00Z"

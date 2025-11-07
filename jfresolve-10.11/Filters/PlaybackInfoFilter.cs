@@ -44,13 +44,14 @@ namespace Jfresolve.Filters
             }
 
             // Check if this is a cached virtual item from our provider
-            if (!_provider.MetaCache.TryGetValue(itemId, out var meta) || meta == null)
+            if (!_provider.MetaCache.TryGetValue(itemId, out var cachedEntry) || cachedEntry == null)
             {
                 // Not our item, proceed normally
                 await next();
                 return;
             }
 
+            var meta = cachedEntry.Meta;
             _logger.LogInformation("[PlaybackInfoFilter] Intercepting playback for cached item: {Name}", meta.Name);
 
             // Check for provider IDs

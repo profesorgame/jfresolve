@@ -16,7 +16,7 @@ namespace Jfresolve.Configuration
         {
             TmdbApiKey = string.Empty;
             MoviesLibraryPath = "/data/movies";
-            ShowsLibraryPath = "/data/shows";
+            ShowsLibraryPath = "/data/tvshows";
             AnimeLibraryPath = string.Empty;
             JellyfinBaseUrl = "http://127.0.0.1:8096";
             AddonManifestUrl = string.Empty;

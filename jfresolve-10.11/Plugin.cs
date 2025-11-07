@@ -5,6 +5,7 @@ using Jfresolve;
 using Jfresolve.Configuration;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
+using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
@@ -21,6 +22,7 @@ namespace Jfresolve
         private JfResolveManager? _manager;
         private ILogger<JfresolvePlugin>? _logger;
         private ILoggerFactory? _loggerFactory;
+        private ILibraryManager? _libraryManager;
         private System.Timers.Timer? _dailyTimer;
         private bool _disposed;
 
@@ -35,14 +37,17 @@ namespace Jfresolve
         /// <param name="applicationPaths">Application paths.</param>
         /// <param name="xmlSerializer">XML serializer.</param>
         /// <param name="loggerFactory">Logger factory.</param>
+        /// <param name="libraryManager">Library manager for library operations.</param>
         public JfresolvePlugin(
             IApplicationPaths applicationPaths,
             IXmlSerializer xmlSerializer,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory,
+            ILibraryManager libraryManager)
             : base(applicationPaths, xmlSerializer)
         {
             Instance = this;
             _loggerFactory = loggerFactory;
+            _libraryManager = libraryManager;
             _logger = loggerFactory.CreateLogger<JfresolvePlugin>();
             _logger.LogInformation("[PLUGIN] jfresolve plugin initialized");
 
@@ -138,7 +143,7 @@ namespace Jfresolve
                 // Use the plugin's logger factory to create a logger for the manager
                 var managerLogger = _loggerFactory?.CreateLogger("JfResolveManager")
                     ?? NullLogger.Instance;
-                using var manager = new JfResolveManager(Configuration, managerLogger);
+                using var manager = new JfResolveManager(Configuration, managerLogger, _libraryManager);
                 await manager.PopulateLibraryAsync().ConfigureAwait(false);
             }
             catch (Exception ex)

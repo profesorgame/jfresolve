@@ -135,7 +135,8 @@ namespace Jfresolve.Filters
                     var baseItem = _provider.IntoBaseItem(meta);
                     if (baseItem == null) continue;
 
-                    _provider.MetaCache[baseItem.Id] = meta;
+                    // Wrap metadata with timestamp for timeout-based expiration
+                    _provider.MetaCache[baseItem.Id] = new CachedMetaEntry(meta);
                     var dto = _dtoService.GetBaseItemDto(baseItem, options);
                     dtos.Add(dto);
                 }
@@ -150,7 +151,8 @@ namespace Jfresolve.Filters
                     var baseItem = _provider.IntoBaseItem(meta);
                     if (baseItem == null) continue;
 
-                    _provider.MetaCache[baseItem.Id] = meta;
+                    // Wrap metadata with timestamp for timeout-based expiration
+                    _provider.MetaCache[baseItem.Id] = new CachedMetaEntry(meta);
                     var dto = _dtoService.GetBaseItemDto(baseItem, options);
                     dtos.Add(dto);
                 }

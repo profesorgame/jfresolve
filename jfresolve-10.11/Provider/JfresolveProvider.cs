@@ -124,7 +124,11 @@ namespace Jfresolve.Provider
         private readonly ILogger<JfresolveProvider> _logger;
         private bool _disposed;
 
-        public Dictionary<Guid, ExternalMeta> MetaCache { get; } = new();
+        /// <summary>
+        /// Cache for external metadata with automatic timeout-based expiration.
+        /// Entries are removed if they're older than 5 minutes.
+        /// </summary>
+        public Dictionary<Guid, CachedMetaEntry> MetaCache { get; } = new();
 
         public JfresolveProvider(
             ILibraryManager libraryManager,
@@ -475,6 +479,24 @@ namespace Jfresolve.Provider
         }
 
         /// <summary>
+        /// Clears all entries from the metadata cache.
+        /// This can be called to force a complete cache reset if needed.
+        /// </summary>
+        public void ClearCache()
+        {
+            try
+            {
+                var count = MetaCache.Count;
+                MetaCache.Clear();
+                _logger.LogInformation("[JfresolveProvider] Cleared metadata cache ({Count} entries)", count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[JfresolveProvider] Error clearing metadata cache");
+            }
+        }
+
+        /// <summary>
         /// Disposes the provider and cleans up resources.
         /// </summary>
         public async ValueTask DisposeAsync()
@@ -494,6 +516,31 @@ namespace Jfresolve.Provider
 
             _disposed = true;
             await ValueTask.CompletedTask.ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// Wrapper for cached metadata with timestamp tracking.
+    /// Allows cache entries to expire after a certain time period.
+    /// </summary>
+    public class CachedMetaEntry
+    {
+        public ExternalMeta Meta { get; set; }
+        public DateTime CachedAtUtc { get; set; }
+
+        public CachedMetaEntry(ExternalMeta meta)
+        {
+            Meta = meta;
+            CachedAtUtc = DateTime.UtcNow;
+        }
+
+        /// <summary>
+        /// Checks if this cache entry has expired (older than 5 minutes).
+        /// </summary>
+        public bool IsExpired(TimeSpan? timeout = null)
+        {
+            var expireAfter = timeout ?? TimeSpan.FromMinutes(5);
+            return DateTime.UtcNow - CachedAtUtc > expireAfter;
         }
     }
 }

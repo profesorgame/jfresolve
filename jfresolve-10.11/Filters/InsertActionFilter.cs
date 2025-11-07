@@ -73,13 +73,24 @@ namespace Jfresolve.Filters
             }
 
             // Try to get cached external metadata
-            if (!_provider.MetaCache.TryGetValue(guid, out var externalMeta) || externalMeta == null)
+            if (!_provider.MetaCache.TryGetValue(guid, out var cachedEntry) || cachedEntry == null)
             {
                 // Not a TMDB search result, proceed normally
                 await next();
                 return;
             }
 
+            // Check if cache entry has expired (older than 5 minutes)
+            // This prevents stale cache entries from being used after deletion
+            if (cachedEntry.IsExpired())
+            {
+                _logger.LogInformation("[InsertActionFilter] Cache entry for item expired (older than 5 minutes); clearing and proceeding normally");
+                _provider.MetaCache.Remove(guid);
+                await next();
+                return;
+            }
+
+            var externalMeta = cachedEntry.Meta;
             _logger.LogInformation("[InsertActionFilter] Found cached metadata for {Name}", externalMeta.Name);
 
             // Convert to BaseItem to get provider IDs
@@ -176,6 +187,18 @@ namespace Jfresolve.Filters
                     if (realItem != null)
                     {
                         _logger.LogInformation("[InsertActionFilter] Created real database item for {Name} with ID {Id}", externalMeta.Name, realItem.Id);
+
+                        // Trigger library refresh immediately so Jellyfin discovers the new STRM files
+                        // This prevents playback issues where Jellyfin can't find the newly created item
+                        try
+                        {
+                            await TriggerLibraryRefreshAsync(libraryFolder);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "[InsertActionFilter] Library refresh failed, but continuing with item creation");
+                        }
+
                         ReplaceGuid(ctx, realItem.Id);
                         _provider.MetaCache.Remove(guid);
                         await next();
@@ -413,6 +436,7 @@ namespace Jfresolve.Filters
 
         /// <summary>
         /// Finds an existing item in the library by provider IDs.
+        /// Also validates that the item's path still exists on disk to prevent orphaned references.
         /// </summary>
         private BaseItem? GetByProviderIds(Dictionary<string, string> providerIds, BaseItemKind kind)
         {
@@ -425,7 +449,29 @@ namespace Jfresolve.Filters
                     Recursive = true
                 };
 
-                return _libraryManager.GetItemList(q).FirstOrDefault();
+                var items = _libraryManager.GetItemList(q);
+
+                // Validate that the item's path still exists
+                // This prevents returning orphaned database references for deleted items
+                foreach (var item in items)
+                {
+                    if (!string.IsNullOrEmpty(item.Path))
+                    {
+                        // Check if the path (file or folder) exists
+                        if (File.Exists(item.Path) || Directory.Exists(item.Path))
+                        {
+                            _logger.LogDebug("[InsertActionFilter] Found library item with valid path: {Path}", item.Path);
+                            return item;
+                        }
+                        else
+                        {
+                            _logger.LogDebug("[InsertActionFilter] Found library item but path no longer exists: {Path} - skipping", item.Path);
+                        }
+                    }
+                }
+
+                _logger.LogDebug("[InsertActionFilter] No items found with valid paths for provider IDs");
+                return null;
             }
             catch (Exception ex)
             {

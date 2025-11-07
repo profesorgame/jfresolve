@@ -35,8 +35,9 @@ namespace Jfresolve.Filters
                 return;
             }
 
-            if (_provider.MetaCache.TryGetValue(id, out var meta))
+            if (_provider.MetaCache.TryGetValue(id, out var cachedEntry))
             {
+                var meta = cachedEntry.Meta;
                 _logger.LogInformation("ImageResourceFilter is intercepting image request for item {Id}", id);
 
                 // Determine which image type is being requested

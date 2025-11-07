@@ -122,6 +122,17 @@ namespace Jfresolve
             {
                 using var populator = new JfResolvePopulator(_config, _logger);
                 await populator.PopulateLibrariesAsync().ConfigureAwait(false);
+
+                // Trigger library refresh after population so Jellyfin immediately discovers new STRM files
+                // This prevents users from having to wait for scheduled library scans
+                try
+                {
+                    await TriggerLibraryRefreshAsync().ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "[MANAGER] Library refresh after population failed, but continuing");
+                }
             }
             catch (Exception ex)
             {
@@ -134,7 +145,7 @@ namespace Jfresolve
         /// </summary>
         public ExternalMeta? GetExternalMeta(Guid guid, JfresolveProvider provider)
         {
-            return provider.MetaCache.TryGetValue(guid, out var meta) ? meta : null;
+            return provider.MetaCache.TryGetValue(guid, out var cachedEntry) ? cachedEntry.Meta : null;
         }
 
         /// <summary>
@@ -142,7 +153,7 @@ namespace Jfresolve
         /// </summary>
         public void SaveExternalMeta(Guid guid, ExternalMeta meta, JfresolveProvider provider)
         {
-            provider.MetaCache[guid] = meta;
+            provider.MetaCache[guid] = new CachedMetaEntry(meta);
         }
 
         /// <summary>
@@ -265,6 +276,48 @@ namespace Jfresolve
             {
                 _logger.LogError(ex, "[MANAGER] Error inserting external meta for {Name}", meta?.Name);
                 return Task.FromResult<(BaseItem?, bool)>((null, false));
+            }
+        }
+
+        /// <summary>
+        /// Triggers a library refresh to discover newly created STRM files.
+        /// This ensures Jellyfin immediately detects files added during population or item insertion.
+        /// </summary>
+        private async Task TriggerLibraryRefreshAsync()
+        {
+            try
+            {
+                if (_libraryManager == null)
+                {
+                    _logger.LogDebug("[MANAGER] Library manager not available for refresh");
+                    return;
+                }
+
+                _logger.LogInformation("[MANAGER] Triggering library refresh to discover new STRM files");
+
+                // Use the library manager to validate/refresh the library
+                // This will cause Jellyfin to scan for new STRM files
+                using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(60));
+                var progress = new Progress<double>(percent =>
+                {
+                    if (percent % 25 == 0) // Log every 25%
+                    {
+                        _logger.LogDebug("[MANAGER] Library refresh progress: {Percent}%", (int)(percent * 100));
+                    }
+                });
+
+                await Task.Run(() => _libraryManager.ValidateMediaLibrary(progress, cts.Token)).ConfigureAwait(false);
+
+                _logger.LogInformation("[MANAGER] Library refresh completed successfully");
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogWarning("[MANAGER] Library refresh timed out after 60 seconds");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[MANAGER] Error triggering library refresh");
+                // Don't throw - library refresh is non-critical
             }
         }
 

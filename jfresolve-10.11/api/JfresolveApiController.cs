@@ -61,9 +61,15 @@ public class JfresolveApiController : ControllerBase
         [FromQuery] string? quality = null,
         [FromQuery] int? index = null)
     {
+        _logger.LogInformation(
+            "Jfresolve: ResolveStream called - Type: {Type}, Id: {Id}, Season: {Season}, Episode: {Episode}, Quality: {Quality}, Index: {Index}",
+            type, id, season ?? "N/A", episode ?? "N/A", quality ?? "N/A", index?.ToString() ?? "N/A"
+        );
+
         var config = JfresolvePlugin.Instance?.Configuration;
         if (config == null)
         {
+            _logger.LogError("Jfresolve: Plugin configuration is null");
             return BadRequest("Plugin not initialized");
         }
 
@@ -106,8 +112,10 @@ public class JfresolveApiController : ControllerBase
             _logger.LogInformation("Jfresolve: Requesting stream from addon: {StreamUrl}", streamUrl);
 
             // Call the Stremio addon to get the stream
-            var httpClient = _httpClientFactory.CreateClient();
-            var response = await httpClient.GetStringAsync(streamUrl);
+            var addonHttpClient = _httpClientFactory.CreateClient();
+            addonHttpClient.Timeout = TimeSpan.FromSeconds(30); // Set timeout to prevent hanging
+            addonHttpClient.DefaultRequestHeaders.Add("User-Agent", "Jfresolve/1.0");
+            var response = await addonHttpClient.GetStringAsync(streamUrl);
 
             // Parse the JSON response
             using var json = JsonDocument.Parse(response);
@@ -144,8 +152,47 @@ public class JfresolveApiController : ControllerBase
 
             _logger.LogInformation("Jfresolve: Resolved {Type}/{Id} to {RedirectUrl}", type, id, redirectUrl);
 
-            // Return 302 redirect to the actual stream URL (e.g., Real-Debrid)
-            return Redirect(redirectUrl);
+            // Ensure the redirect URL is absolute
+            if (!Uri.IsWellFormedUriString(redirectUrl, UriKind.Absolute))
+            {
+                _logger.LogWarning("Jfresolve: Redirect URL is not absolute: {RedirectUrl}", redirectUrl);
+                return BadRequest("Invalid redirect URL format");
+            }
+
+            // Jellyfin 10.11.6 compatibility: Proxy the stream instead of redirecting
+            // FFmpeg in 10.11.6 doesn't properly follow HTTP redirects from plugin endpoints
+            // By proxying, FFmpeg gets the stream directly without needing to follow redirects
+            try
+            {
+                _logger.LogInformation("Jfresolve: Proxying stream from {RedirectUrl}", redirectUrl);
+                
+                var streamHttpClient = _httpClientFactory.CreateClient();
+                streamHttpClient.Timeout = TimeSpan.FromMinutes(10); // Longer timeout for streaming
+                
+                // Stream the content directly to the response
+                var streamResponse = await streamHttpClient.GetAsync(redirectUrl, HttpCompletionOption.ResponseHeadersRead);
+                streamResponse.EnsureSuccessStatusCode();
+
+                // Copy headers that might be important for streaming
+                if (streamResponse.Content.Headers.ContentType != null)
+                {
+                    Response.ContentType = streamResponse.Content.Headers.ContentType.ToString();
+                }
+                
+                if (streamResponse.Content.Headers.ContentLength.HasValue)
+                {
+                    Response.ContentLength = streamResponse.Content.Headers.ContentLength.Value;
+                }
+
+                // Copy the stream to the response
+                await streamResponse.Content.CopyToAsync(Response.Body);
+                return new EmptyResult();
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "Jfresolve: Error proxying stream from {RedirectUrl}", redirectUrl);
+                return StatusCode(502, $"Error proxying stream: {ex.Message}");
+            }
         }
         catch (HttpRequestException ex)
         {

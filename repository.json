@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/dennisstorm-hass/jfresolve/main/jfresolve.png",
     "versions": [
       {
+        "version": "1.0.0.7",
+        "changelog": "Fixed Jellyfin 10.11.6 streaming compatibility by proxying streams instead of redirecting. Removed forced transcoding - now lets Jellyfin decide transcoding based on codec compatibility and client capabilities.",
+        "sourceUrl": "https://github.com/dennisstorm-hass/jfresolve/releases/download/10.11.1.0.0.7/jfresolve.zip",
+        "checksum": "ca6769610706f5b671d0e2dac345a096",
+        "targetAbi": "10.11.0.0",
+        "timestamp": "2026-01-29T12:00:00Z"
+      },
+      {
         "version": "1.0.0.6",
         "changelog": "Fixed compatibility issues with Jellyfin 10.11.6. Updated MediaSourceManagerDecorator to use compatible method signatures.",
         "sourceUrl": "https://github.com/dennisstorm-hass/jfresolve/releases/download/10.11.1.0.0.6/jfresolve.zip",

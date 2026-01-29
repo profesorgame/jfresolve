@@ -1,4 +1,5 @@
 #nullable disable
+#nullable disable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +21,8 @@ using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.MediaInfo;
 using MediaBrowser.Model.Querying;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.Logging;
 
 namespace Jfresolve.Decorators;
@@ -33,17 +36,20 @@ public class MediaSourceManagerDecorator : IMediaSourceManager
     private readonly ILogger<MediaSourceManagerDecorator> _log;
     private readonly IItemRepository _repo;
     private readonly IDirectoryService _directoryService;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
     public MediaSourceManagerDecorator(
         IMediaSourceManager inner,
         ILogger<MediaSourceManagerDecorator> log,
         IItemRepository repo,
-        IDirectoryService directoryService)
+        IDirectoryService directoryService,
+        IHttpContextAccessor httpContextAccessor)
     {
         _inner = inner;
         _log = log;
         _repo = repo;
         _directoryService = directoryService;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<IReadOnlyList<MediaSourceInfo>> GetPlaybackMediaSources(BaseItem item, User user, bool allowMediaProbe, bool enablePathSubstitution, CancellationToken cancellationToken)
@@ -298,11 +304,11 @@ public class MediaSourceManagerDecorator : IMediaSourceManager
             return;
         }
 
+        // Set protocol and remote flag - let Jellyfin decide on transcoding based on its own logic
         info.Protocol = MediaProtocol.Http;
         info.IsRemote = true;
-        info.SupportsDirectPlay = false;
-        info.SupportsDirectStream = false;
-        info.SupportsTranscoding = true;
+        // Don't force transcoding - let Jellyfin decide based on codec compatibility, client capabilities, etc.
+        // SupportsDirectPlay, SupportsDirectStream, and SupportsTranscoding will be determined by Jellyfin
     }
 
     private bool IsJfresolve(BaseItem item)

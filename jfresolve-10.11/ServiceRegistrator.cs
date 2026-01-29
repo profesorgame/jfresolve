@@ -40,6 +40,9 @@ public class ServiceRegistrator : IPluginServiceRegistrator
 
         // Register HttpClientFactory for TMDB API calls
         services.AddHttpClient();
+        
+        // Register HttpContextAccessor for accessing HTTP context in decorators (required for Jellyfin 10.11.6 compatibility)
+        services.AddHttpContextAccessor();
 
         // Register FFmpeg configuration service (Gelato pattern)
         services.AddHostedService<JfresolveFFmpegConfigService>();

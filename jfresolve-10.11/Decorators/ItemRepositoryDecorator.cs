@@ -4,6 +4,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Persistence;
@@ -89,6 +92,13 @@ public sealed class JfresolveItemRepository : IItemRepository
     public System.Threading.Tasks.Task<bool> ItemExistsAsync(Guid id) => _inner.ItemExistsAsync(id);
     public bool GetIsPlayed(Jellyfin.Database.Implementations.Entities.User user, Guid id, bool recursive) => _inner.GetIsPlayed(user, id, recursive);
     public IReadOnlyDictionary<string, MediaBrowser.Controller.Entities.Audio.MusicArtist[]> FindArtists(IReadOnlyList<string> artistNames) => _inner.FindArtists(artistNames);
+    
+    // Jellyfin 10.11.6 compatibility: ReattachUserDataAsync was added to IItemRepository
+    // Now that we're using 10.11.6 NuGet packages, we can implement it directly
+    public Task ReattachUserDataAsync(BaseItem item, CancellationToken cancellationToken)
+    {
+        return _inner.ReattachUserDataAsync(item, cancellationToken);
+    }
 }
 
 /// <summary>

@@ -6,20 +6,22 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>Jfresolve</AssemblyName>
     <RootNamespace>Jfresolve</RootNamespace>
-    <Version>1.0.0.5</Version>
-    <AssemblyVersion>1.0.0.5</AssemblyVersion>
-    <FileVersion>1.0.0.5</FileVersion>
+    <Version>1.0.0.13</Version>
+    <AssemblyVersion>1.0.0.13</AssemblyVersion>
+    <FileVersion>1.0.0.13</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Jellyfin.Model" Version="10.11" />
-    <PackageReference Include="Jellyfin.Controller" Version="10.11" />
-    <PackageReference Include="Jellyfin.Common" Version="10.11" />
+    <PackageReference Include="Jellyfin.Model" Version="10.11.6" />
+    <PackageReference Include="Jellyfin.Controller" Version="10.11.6" />
+    <PackageReference Include="Jellyfin.Common" Version="10.11.6" />
   </ItemGroup>
 
   <ItemGroup>
     <None Remove="Config\config.html" />
     <EmbeddedResource Include="Config\config.html" />
+    <None Remove="jfresolve.png" />
+    <EmbeddedResource Include="jfresolve.png" />
   </ItemGroup>
 
 </Project>

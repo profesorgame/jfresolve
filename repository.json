@@ -2,16 +2,80 @@
   {
     "category": "General",
     "name": "Jfresolve",
-    "owner": "vicking20",
+    "owner": "dennisstorm-hass",
     "guid": "506F18B8-5DAD-4CD3-B9A0-F7ED933E9939",
     "description": "Stream and resolve external media sources directly through Jellyfin.",
     "overview": "Simplify external playback — Jfresolve automatically finds and streams external media from stremio.",
-    "imageUrl": "https://raw.githubusercontent.com/vicking20/jfresolve/main/jfresolve.png",
+    "imageUrl": "https://raw.githubusercontent.com/dennisstorm-hass/jfresolve/main/jfresolve.png",
     "versions": [
+      {
+        "version": "1.0.0.13",
+        "changelog": "Fixed plugin image not loading: Added embedded resource for jfresolve.png and created Image endpoint to serve it. Added route handling for both /Plugins/Jfresolve/Image and /Plugins/{guid}/{version}/Image patterns.",
+        "sourceUrl": "https://github.com/dennisstorm-hass/jfresolve/releases/download/10.11.1.0.0.13/jfresolve.zip",
+        "checksum": "d9ab313237ab917a0626c0d2bcbfecb5",
+        "targetAbi": "10.11.0.0",
+        "timestamp": "2026-01-29T13:45:00Z"
+      },
+      {
+        "version": "1.0.0.12",
+        "changelog": "Fixed Content-Range header handling error: Changed from Contains/GetValues to TryGetValues to properly handle Content-Range header copying without throwing InvalidOperationException. Now checks both response headers and content headers.",
+        "sourceUrl": "https://github.com/dennisstorm-hass/jfresolve/releases/download/10.11.1.0.0.12/jfresolve.zip",
+        "checksum": "9eaf12a695fcaae9b073ab2fa3b2b534",
+        "targetAbi": "10.11.0.0",
+        "timestamp": "2026-01-29T13:30:00Z"
+      },
+      {
+        "version": "1.0.0.11",
+        "changelog": "Fixed Jellyfin 10.11.6 compatibility: Updated NuGet packages to 10.11.6 and implemented ReattachUserDataAsync with correct signature (BaseItem, CancellationToken). This resolves the interface implementation error.",
+        "sourceUrl": "https://github.com/dennisstorm-hass/jfresolve/releases/download/10.11.1.0.0.11/jfresolve.zip",
+        "checksum": "f8a62351dcfed6db9383b87044a2ea19",
+        "targetAbi": "10.11.0.0",
+        "timestamp": "2026-01-29T13:15:00Z"
+      },
+      {
+        "version": "1.0.0.10",
+        "changelog": "Fixed Jellyfin 10.11.6 compatibility: Improved ReattachUserDataAsync implementation using reflection with proper BindingFlags to ensure interface contract is satisfied at runtime.",
+        "sourceUrl": "https://github.com/dennisstorm-hass/jfresolve/releases/download/10.11.1.0.0.10/jfresolve.zip",
+        "checksum": "37e2a88237cbf33219a7bb4d9f17e248",
+        "targetAbi": "10.11.0.0",
+        "timestamp": "2026-01-29T13:00:00Z"
+      },
+      {
+        "version": "1.0.0.9",
+        "changelog": "Fixed Jellyfin 10.11.6 compatibility issue: Added missing ReattachUserDataAsync method implementation to ItemRepositoryDecorator using reflection for interface compatibility.",
+        "sourceUrl": "https://github.com/dennisstorm-hass/jfresolve/releases/download/10.11.1.0.0.9/jfresolve.zip",
+        "checksum": "6b89f1e15c011fa7b755bc857cef2e5b",
+        "targetAbi": "10.11.0.0",
+        "timestamp": "2026-01-29T12:45:00Z"
+      },
+      {
+        "version": "1.0.0.8",
+        "changelog": "Fixed Jellyfin 10.11.6 streaming compatibility with HTTP Range request support. Added proper stream proxying with unbuffered streaming, range request handling (206 Partial Content), and improved header forwarding for FFmpeg compatibility.",
+        "sourceUrl": "https://github.com/dennisstorm-hass/jfresolve/releases/download/10.11.1.0.0.8/jfresolve.zip",
+        "checksum": "b1da5594029c3f3b399565561bbf3171",
+        "targetAbi": "10.11.0.0",
+        "timestamp": "2026-01-29T12:30:00Z"
+      },
+      {
+        "version": "1.0.0.7",
+        "changelog": "Fixed Jellyfin 10.11.6 streaming compatibility by proxying streams instead of redirecting. Removed forced transcoding - now lets Jellyfin decide transcoding based on codec compatibility and client capabilities.",
+        "sourceUrl": "https://github.com/dennisstorm-hass/jfresolve/releases/download/10.11.1.0.0.7/jfresolve.zip",
+        "checksum": "ca6769610706f5b671d0e2dac345a096",
+        "targetAbi": "10.11.0.0",
+        "timestamp": "2026-01-29T12:00:00Z"
+      },
+      {
+        "version": "1.0.0.6",
+        "changelog": "Fixed compatibility issues with Jellyfin 10.11.6. Updated MediaSourceManagerDecorator to use compatible method signatures.",
+        "sourceUrl": "https://github.com/dennisstorm-hass/jfresolve/releases/download/10.11.1.0.0.6/jfresolve.zip",
+        "checksum": "f949b2053ef3029bb5e1b8ebe206b254",
+        "targetAbi": "10.11.0.0",
+        "timestamp": "2026-01-29T10:36:00Z"
+      },
       {
         "version": "1.0.0.5",
         "changelog": "Added failover system for dead links with configurable time windows. Code cleanup and optimization. Improved quality version support with individual stream probing.",
-        "sourceUrl": "https://github.com/vicking20/jfresolve/releases/download/10.11.1.0.0.5/jfresolve.zip",
+        "sourceUrl": "https://github.com/dennisstorm-hass/jfresolve/releases/download/10.11.1.0.0.5/jfresolve.zip",
         "checksum": "cd720cb021de832e50e81b374e22b79f",
         "targetAbi": "10.11.0.0",
         "timestamp": "2026-01-01T12:00:00Z"
@@ -19,7 +83,7 @@
       {
         "version": "1.0.0.4",
         "changelog": "Added new classifications for auto populate. Thanks to @Ajayrajasekaran",
-        "sourceUrl": "https://github.com/vicking20/jfresolve/releases/download/10.11.1.0.0.4/jfresolve.zip",
+        "sourceUrl": "https://github.com/dennisstorm-hass/jfresolve/releases/download/10.11.1.0.0.4/jfresolve.zip",
         "checksum": "9d4d9a951ad42118988e950a8679907c",
         "targetAbi": "10.11.0.0",
         "timestamp": "2025-12-02T12:10:00Z"
@@ -27,7 +91,7 @@
       {
         "version": "1.0.0.3",
         "changelog": "Code overhaul, new methods for search, save and auto populate, new instructions",
-        "sourceUrl": "https://github.com/vicking20/jfresolve/releases/download/10.11.1.0.0.3/jfresolve.zip",
+        "sourceUrl": "https://github.com/dennisstorm-hass/jfresolve/releases/download/10.11.1.0.0.3/jfresolve.zip",
         "checksum": "4b765a9ad511eadc2253cf8bc8e823f2",
         "targetAbi": "10.11.0.0",
         "timestamp": "2025-11-18T12:10:00Z"
@@ -35,7 +99,7 @@
       {
         "version": "1.0.0.2",
         "changelog": "Targeted library refresh after search added",
-        "sourceUrl": "https://github.com/vicking20/jfresolve/releases/download/10.11.1.0.0.2/jfresolve.zip",
+        "sourceUrl": "https://github.com/dennisstorm-hass/jfresolve/releases/download/10.11.1.0.0.2/jfresolve.zip",
         "checksum": "4d11fc08cee441a4b94e2c34c0c1e992",
         "targetAbi": "10.11.0.0",
         "timestamp": "2025-11-07T12:10:00Z"
@@ -43,7 +107,7 @@
       {
         "version": "1.0.0.1",
         "changelog": "Library refresh after search added",
-        "sourceUrl": "https://github.com/vicking20/jfresolve/releases/download/10.11.1.0.0.1/jfresolve.zip",
+        "sourceUrl": "https://github.com/dennisstorm-hass/jfresolve/releases/download/10.11.1.0.0.1/jfresolve.zip",
         "checksum": "4386fe0123ca8addc2f98c4f21dd44b6",
         "targetAbi": "10.11.0.0",
         "timestamp": "2025-11-07T12:04:00Z"
@@ -51,7 +115,7 @@
       {
         "version": "1.0.0.0",
         "changelog": "Jfresolve plugin for jellyfin version 10.11.x.x - Added configurable library population scheduling, fixed plugin disposal on uninstall, improved version segmentation",
-        "sourceUrl": "https://github.com/vicking20/jfresolve/releases/download/10.11.1.0.0.0/jfresolve.zip",
+        "sourceUrl": "https://github.com/dennisstorm-hass/jfresolve/releases/download/10.11.1.0.0.0/jfresolve.zip",
         "checksum": "d010683d6c50db1c4e4f86f5198f5ec1",
         "targetAbi": "10.11.0.0",
         "timestamp": "2025-11-04T12:04:00Z"

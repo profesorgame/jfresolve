@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -16,6 +18,7 @@ namespace Jfresolve.Api;
 /// </summary>
 [ApiController]
 [Route("Plugins/Jfresolve")]
+[Route("Plugins/506f18b85dad4cd3b9a0f7ed933e9939")] // Alternative route using plugin GUID for image requests
 public class JfresolveApiController : ControllerBase
 {
     private readonly ILogger<JfresolveApiController> _logger;
@@ -51,8 +54,9 @@ public class JfresolveApiController : ControllerBase
     /// <param name="id">The IMDb or TMDB ID</param>
     /// <param name="season">Optional season number (for series)</param>
     /// <param name="episode">Optional episode number (for series)</param>
-    /// <returns>Redirect to the stream URL</returns>
+    /// <returns>Proxied stream or error</returns>
     [HttpGet("resolve/{type}/{id}")]
+    [AllowAnonymous] // FFmpeg needs to access this endpoint without authentication
     public async Task<IActionResult> ResolveStream(
         string type,
         string id,
@@ -61,9 +65,16 @@ public class JfresolveApiController : ControllerBase
         [FromQuery] string? quality = null,
         [FromQuery] int? index = null)
     {
+        _logger.LogInformation(
+            "Jfresolve: ResolveStream called - Type: {Type}, Id: {Id}, Season: {Season}, Episode: {Episode}, Quality: {Quality}, Index: {Index}, RequestPath: {Path}, Range: {Range}",
+            type, id, season ?? "N/A", episode ?? "N/A", quality ?? "N/A", index?.ToString() ?? "N/A",
+            Request.Path, Request.Headers["Range"].ToString()
+        );
+
         var config = JfresolvePlugin.Instance?.Configuration;
         if (config == null)
         {
+            _logger.LogError("Jfresolve: Plugin configuration is null");
             return BadRequest("Plugin not initialized");
         }
 
@@ -106,8 +117,10 @@ public class JfresolveApiController : ControllerBase
             _logger.LogInformation("Jfresolve: Requesting stream from addon: {StreamUrl}", streamUrl);
 
             // Call the Stremio addon to get the stream
-            var httpClient = _httpClientFactory.CreateClient();
-            var response = await httpClient.GetStringAsync(streamUrl);
+            var addonHttpClient = _httpClientFactory.CreateClient();
+            addonHttpClient.Timeout = TimeSpan.FromSeconds(30); // Set timeout to prevent hanging
+            addonHttpClient.DefaultRequestHeaders.Add("User-Agent", "Jfresolve/1.0");
+            var response = await addonHttpClient.GetStringAsync(streamUrl);
 
             // Parse the JSON response
             using var json = JsonDocument.Parse(response);
@@ -144,8 +157,91 @@ public class JfresolveApiController : ControllerBase
 
             _logger.LogInformation("Jfresolve: Resolved {Type}/{Id} to {RedirectUrl}", type, id, redirectUrl);
 
-            // Return 302 redirect to the actual stream URL (e.g., Real-Debrid)
-            return Redirect(redirectUrl);
+            // Ensure the redirect URL is absolute
+            if (!Uri.IsWellFormedUriString(redirectUrl, UriKind.Absolute))
+            {
+                _logger.LogWarning("Jfresolve: Redirect URL is not absolute: {RedirectUrl}", redirectUrl);
+                return BadRequest("Invalid redirect URL format");
+            }
+
+            // Jellyfin 10.11.6 compatibility: Proxy the stream instead of redirecting
+            // FFmpeg in 10.11.6 doesn't properly follow HTTP redirects from plugin endpoints
+            // By proxying, FFmpeg gets the stream directly without needing to follow redirects
+            // IMPORTANT: Must support HTTP Range requests (206 Partial Content) for FFmpeg seeking
+            try
+            {
+                _logger.LogInformation("Jfresolve: Proxying stream from {RedirectUrl}", redirectUrl);
+                
+                var streamHttpClient = _httpClientFactory.CreateClient();
+                streamHttpClient.Timeout = TimeSpan.FromMinutes(10); // Longer timeout for streaming
+                
+                // Handle HTTP Range requests for seeking (required by FFmpeg)
+                var rangeHeader = Request.Headers["Range"].ToString();
+                HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, redirectUrl);
+                
+                if (!string.IsNullOrEmpty(rangeHeader))
+                {
+                    _logger.LogDebug("Jfresolve: Range request detected: {Range}", rangeHeader);
+                    requestMessage.Headers.Add("Range", rangeHeader);
+                }
+                
+                // Stream the content directly to the response
+                var streamResponse = await streamHttpClient.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead);
+                streamResponse.EnsureSuccessStatusCode();
+
+                // Copy status code (206 for partial content if range was requested)
+                Response.StatusCode = (int)streamResponse.StatusCode;
+
+                // Copy headers that might be important for streaming
+                if (streamResponse.Content.Headers.ContentType != null)
+                {
+                    Response.ContentType = streamResponse.Content.Headers.ContentType.ToString();
+                }
+                
+                // Copy Content-Range header if present (for 206 Partial Content responses)
+                // Content-Range can be in response headers or content headers depending on the server
+                string? contentRangeValue = null;
+                if (streamResponse.Headers.TryGetValues("Content-Range", out var responseContentRange))
+                {
+                    contentRangeValue = responseContentRange.FirstOrDefault();
+                }
+                else if (streamResponse.Content.Headers.TryGetValues("Content-Range", out var contentContentRange))
+                {
+                    contentRangeValue = contentContentRange.FirstOrDefault();
+                }
+                
+                if (!string.IsNullOrEmpty(contentRangeValue))
+                {
+                    Response.Headers["Content-Range"] = contentRangeValue;
+                }
+                
+                // Copy Accept-Ranges header to indicate we support range requests
+                Response.Headers["Accept-Ranges"] = "bytes";
+                
+                if (streamResponse.Content.Headers.ContentLength.HasValue)
+                {
+                    Response.ContentLength = streamResponse.Content.Headers.ContentLength.Value;
+                }
+
+                // Copy the stream to the response (unbuffered for better streaming performance)
+                // Use a buffer to avoid blocking, but keep it small for low latency
+                var buffer = new byte[81920]; // 80KB buffer
+                using (var stream = await streamResponse.Content.ReadAsStreamAsync())
+                {
+                    int bytesRead;
+                    while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                    {
+                        await Response.Body.WriteAsync(buffer, 0, bytesRead);
+                        await Response.Body.FlushAsync(); // Flush to ensure data is sent immediately
+                    }
+                }
+                return new EmptyResult();
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "Jfresolve: Error proxying stream from {RedirectUrl}", redirectUrl);
+                return StatusCode(502, $"Error proxying stream: {ex.Message}");
+            }
         }
         catch (HttpRequestException ex)
         {
@@ -161,6 +257,61 @@ public class JfresolveApiController : ControllerBase
         {
             _logger.LogError(ex, "Jfresolve: Error resolving stream for {Type}/{Id}", type, id);
             return StatusCode(500, $"Error resolving stream: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Serves the plugin image (jfresolve.png)
+    /// Jellyfin requests this from /Plugins/{guid}/{version}/Image
+    /// </summary>
+    [HttpGet("Image")]
+    [HttpGet("{version}/Image")] // Handle versioned requests: /Plugins/{guid}/{version}/Image
+    [AllowAnonymous]
+    public IActionResult GetPluginImage(string? version = null)
+    {
+        try
+        {
+            _logger.LogDebug("Jfresolve: Plugin image requested (version: {Version})", version ?? "none");
+            
+            var assembly = Assembly.GetExecutingAssembly();
+            
+            // Try different possible resource names
+            var possibleNames = new[]
+            {
+                "Jfresolve.jfresolve.png",
+                "jfresolve.jfresolve.png",
+                "Jfresolve.jfresolve-10.11.jfresolve.png"
+            };
+            
+            Stream? imageStream = null;
+            string? foundResourceName = null;
+            
+            foreach (var resourceName in possibleNames)
+            {
+                imageStream = assembly.GetManifestResourceStream(resourceName);
+                if (imageStream != null)
+                {
+                    foundResourceName = resourceName;
+                    _logger.LogDebug("Jfresolve: Found plugin image resource: {ResourceName}", resourceName);
+                    break;
+                }
+            }
+            
+            // If not found, list all resources for debugging
+            if (imageStream == null)
+            {
+                var allResources = assembly.GetManifestResourceNames();
+                _logger.LogWarning("Jfresolve: Plugin image resource not found. Available resources: {Resources}", 
+                    string.Join(", ", allResources));
+                return NotFound("Plugin image not found");
+            }
+
+            return File(imageStream, "image/png");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Jfresolve: Error serving plugin image");
+            return StatusCode(500, "Error serving plugin image");
         }
     }
 

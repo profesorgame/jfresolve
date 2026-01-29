@@ -38,7 +38,7 @@ Similar project: If you aren't interested in using the plugin, you can instead u
 
 ## Versions
 
-### **jfresolve-10.11** (Current)
+### **jfresolve-10.12** (Current)
 - **Target**: Jellyfin 10.11.0+ (Tested and compatible with Jellyfin 10.11.6)
 - **Framework**: .NET 9.0
 - **Status**: Active development

@@ -196,10 +196,20 @@ public class JfresolveApiController : ControllerBase
                 }
                 
                 // Copy Content-Range header if present (for 206 Partial Content responses)
-                if (streamResponse.Headers.Contains("Content-Range"))
+                // Content-Range can be in response headers or content headers depending on the server
+                string? contentRangeValue = null;
+                if (streamResponse.Headers.TryGetValues("Content-Range", out var responseContentRange))
                 {
-                    var contentRangeValues = streamResponse.Headers.GetValues("Content-Range");
-                    Response.Headers["Content-Range"] = string.Join(", ", contentRangeValues);
+                    contentRangeValue = responseContentRange.FirstOrDefault();
+                }
+                else if (streamResponse.Content.Headers.TryGetValues("Content-Range", out var contentContentRange))
+                {
+                    contentRangeValue = contentContentRange.FirstOrDefault();
+                }
+                
+                if (!string.IsNullOrEmpty(contentRangeValue))
+                {
+                    Response.Headers["Content-Range"] = contentRangeValue;
                 }
                 
                 // Copy Accept-Ranges header to indicate we support range requests

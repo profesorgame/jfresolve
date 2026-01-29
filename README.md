@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/vicking20/jfresolve/main/jfresolve.png" alt="Jfresolve Logo" width="128" height="128">
+  <img src="https://raw.githubusercontent.com/dennisstorm-hass/jfresolve/main/jfresolve.png" alt="Jfresolve Logo" width="128" height="128">
 </p>
 
 <h1 align="center">Jfresolve - Jellyfin Plugin</h1>
@@ -7,16 +7,12 @@
 A Jellyfin plugin that integrates external streaming sources (Stremio addons) from a debrid provider with your Jellyfin library, enabling on-demand content discovery and streaming.
 
 <p align="center">
-  <a href="https://ko-fi.com/vicking20" target="_blank">
-    <img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee">
-  </a>
-  <a href="https://discord.gg/hPz3qn72Ue" target="_blank">
-    <img src="https://img.shields.io/badge/Chat%20on%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord">
-  </a>
-  <a href="https://raw.githubusercontent.com/vicking20/jfresolve/refs/heads/main/repository.json" target="_blank">
+  <a href="https://raw.githubusercontent.com/dennisstorm-hass/jfresolve/main/repository.json" target="_blank">
     <img src="https://img.shields.io/badge/Add%20to%20Jellyfin-13B5EA?style=for-the-badge&logo=jellyfin&logoColor=white" alt="Jellyfin Repo">
   </a>
 </p>
+
+> **Note**: This is a maintained fork of the original [Jfresolve](https://github.com/vicking20/jfresolve) plugin by [vicking20](https://github.com/vicking20). This fork includes compatibility fixes for Jellyfin 10.11.6 and improvements to streaming functionality.
 
 Similar project: If you aren't interested in using the plugin, you can instead use the webapp: [**JF-Resolve**](https://github.com/vicking20/jf-resolve) directly with Jellyfin.
 
@@ -43,17 +39,32 @@ Similar project: If you aren't interested in using the plugin, you can instead u
 ## Versions
 
 ### **jfresolve-10.11** (Current)
-- **Target**: Jellyfin 10.11+
+- **Target**: Jellyfin 10.11.0+ (Tested and compatible with Jellyfin 10.11.6)
 - **Framework**: .NET 9.0
 - **Status**: Active development
-- **Latest Release**: See [Releases](../../releases)
+- **Latest Release**: See [Releases](https://github.com/dennisstorm-hass/jfresolve/releases)
+
+### Recent Changes (v1.0.0.12+)
+
+- **Jellyfin 10.11.6 Compatibility**: Fixed interface implementation issues with `IItemRepository.ReattachUserDataAsync` method
+- **Streaming Improvements**: Enhanced HTTP range request support (206 Partial Content) for FFmpeg seeking
+- **Stream Proxying**: Implemented proper stream proxying instead of redirects for better compatibility with Jellyfin 10.11.6
+- **Header Handling**: Fixed Content-Range header handling to prevent streaming errors
+- **NuGet Packages**: Updated to Jellyfin 10.11.6 packages for proper interface compatibility
 
 ## Installation
 
-1. Add the link to the plugin to your Jellyfin server's plugin repository: `https://raw.githubusercontent.com/vicking20/jfresolve/refs/heads/main/repository.json`
+1. Add the link to the plugin to your Jellyfin server's plugin repository: 
+   ```
+   https://raw.githubusercontent.com/dennisstorm-hass/jfresolve/main/repository.json
+   ```
 2. Install and configure your plugin. Tested with Torrentio, TorrentioRD, Aiostreams, MediaFusion. Your plugin needs to have your real debrid key setup.
 3. During the first time configuration or after adding a new library path, after saving your settings, you should restart Jellyfin, then trigger a library refresh for changes to take effect.
 4. If you have used an older version of Jfresolve older than 1.0.0.3, you need to uninstall the older version.
+
+### Jellyfin 10.11.6 Users
+
+This fork is specifically tested and compatible with Jellyfin 10.11.6. If you're experiencing issues with the original plugin on Jellyfin 10.11.6, this fork includes the necessary compatibility fixes.
 ## Configuration
 
 ### Required Settings
@@ -134,6 +145,13 @@ Compiled DLL will be at:
 - Check Jellyfin FFmpeg configuration.
 - Ensure Debrid is authorized in your plugin.
 - Check Jellyfin logs for stream resolution errors.
+- For Jellyfin 10.11.6: Ensure you're using version 1.0.0.11 or later which includes compatibility fixes.
+
+### Plugin fails to load in Jellyfin 10.11.6
+
+- Ensure you're using version 1.0.0.11 or later of this fork.
+- The original plugin may not work with Jellyfin 10.11.6 due to interface changes.
+- Check Jellyfin logs for "does not have an implementation" errors - this indicates you need the updated version.
 
 ## Contributing
 
@@ -147,19 +165,23 @@ Contributions are welcome! Please:
 
 ## Acknowledgments
 
+- **Original Developer**: [vicking20](https://github.com/vicking20) - Original creator of Jfresolve
 - This plugin was only possible after going through [Gelato](https://github.com/lostb1t/Gelato). Big thanks to [lostb1t](https://github.com/lostb1t).
-- My old project [jf-resolve](https://github.com/vicking20/jf-resolve).
+- Original project [jf-resolve](https://github.com/vicking20/jf-resolve).
 - Jellyfin project for the media server.
 - TMDB for metadata.
 - Stremio for addon ecosystem.
-- All users.
+- All users and contributors.
 
 ## Support
 
-- **Issues**: Report bugs on [GitHub Issues](../../issues).
-- **Discussions**: Ask questions in [GitHub Discussions](../../discussions).
+- **Issues**: Report bugs on [GitHub Issues](https://github.com/dennisstorm-hass/jfresolve/issues).
+- **Discussions**: Ask questions in [GitHub Discussions](https://github.com/dennisstorm-hass/jfresolve/discussions).
+- **Original Repository**: For the original plugin, visit [vicking20/jfresolve](https://github.com/vicking20/jfresolve).
 - **Jellyfin Forum**: Check the [Jellyfin Community](https://jellyfin.org/docs/general/community/).
 
 ## Disclaimer
 
-This project is intended for **educational purposes only**. It was developed to learn more about the c# language and understand how to inject custom results when a user does a search in Jellyfin using Dto's. While it was a fun experiment, it is provided as-is, and others are welcome to modify or use it for their own educational purposes at their risk.
+This project is intended for **educational purposes only**. The original plugin was developed to learn more about the c# language and understand how to inject custom results when a user does a search in Jellyfin using Dto's. While it was a fun experiment, it is provided as-is, and others are welcome to modify or use it for their own educational purposes at their risk.
+
+This fork maintains the same educational purpose while providing compatibility fixes for newer Jellyfin versions.
